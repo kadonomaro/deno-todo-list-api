@@ -1,5 +1,5 @@
 export interface IItem {
     id: string
-    title: string,
+    title: string
     isComplete: boolean
 }
