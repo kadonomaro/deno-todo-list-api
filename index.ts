@@ -51,6 +51,37 @@ router
             }
         }
     })
+    .put('/api/todos/:id', async ({ response, request, params }: IContext) => {
+        const index: number | undefined = todos.findIndex(item => item.id === params.id);
+
+        if (index) {
+            const body = await request.body();
+            todos[index] = { ...todos[index], ...body.value };
+            response.status = 200;
+            response.body = todos[index]
+
+
+        } else {
+            response.status = 404;
+            response.body = {
+                message: 'Item not found'
+            }
+        }
+    })
+    .delete('/api/todos/:id', async ({ response, params }: IContext) => {
+        const index: number | undefined = todos.findIndex(item => item.id === params.id);
+
+        if (index) {
+            todos.splice(index, 1);
+            response.status = 200;
+            response.body = todos;
+        } else {
+            response.status = 404;
+            response.body = {
+                message: 'Item not found'
+            }
+        }
+    });
 
 app.use(router.routes());
 
