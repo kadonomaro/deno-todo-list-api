@@ -1,16 +1,39 @@
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import { Client } from "https://deno.land/x/mysql/mod.ts";
 import { IItem } from "./interfaces/item.interface.ts";
 import { IContext } from "./interfaces/context.interface.ts";
+import { settings } from "./db.settings.js";
+
 
 const port = 8000;
 const app = new Application();
 const router = new Router();
+const client = await new Client().connect(settings);
 
-const todos: Array<IItem> = [
-    {id: '1', title: 'First', isComplete: false},
-    {id: '2', title: 'Second', isComplete: false},
-    {id: '3', title: 'Third', isComplete: true}
-]
+await client.execute(`DROP TABLE IF EXISTS todos`);
+await client.execute(`
+    CREATE TABLE todos (
+        id int(30) NOT NULL,
+        title varchar(100) NOT NULL,
+        completed varchar(10) NOT NULL,
+        PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+`);
+
+let todos: Array<IItem> = [
+    { id: '1', title: 'First', isComplete: true },
+    { id: '2', title: 'Second', isComplete: false },
+    { id: '3', title: 'Third', isComplete: true }
+];
+
+todos.forEach(async (todo) => {
+    await client.execute(`INSERT INTO todos(id, title, completed) values(?, ?, ?)`, [
+        todo.id,
+        todo.title,
+        todo.isComplete
+    ]);
+});
+
 
 router
     .get('/api/todos', ({ response }: IContext) => {
@@ -60,7 +83,6 @@ router
             response.status = 200;
             response.body = todos[index]
 
-
         } else {
             response.status = 404;
             response.body = {
@@ -69,18 +91,9 @@ router
         }
     })
     .delete('/api/todos/:id', async ({ response, params }: IContext) => {
-        const index: number | undefined = todos.findIndex(item => item.id === params.id);
-
-        if (index) {
-            todos.splice(index, 1);
-            response.status = 200;
-            response.body = todos;
-        } else {
-            response.status = 404;
-            response.body = {
-                message: 'Item not found'
-            }
-        }
+        todos = todos.filter(item => item.id !== params.id);
+        response.status = 200;
+        response.body = { todos };
     });
 
 app.use(router.routes());

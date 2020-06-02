@@ -1,5 +1,5 @@
 export interface IContext {
-    response: any
-    request?: any
-    params?: any
+    response: any;
+    request?: any;
+    params?: any;
 }
