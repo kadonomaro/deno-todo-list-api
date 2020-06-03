@@ -1,25 +1,23 @@
-
+import { Client } from "https://deno.land/x/mysql/mod.ts";
+import { settings } from "../db.settings.ts";
 import { IItem } from "../interfaces/item.interface.ts";
 import { IContext } from "../interfaces/context.interface.ts";
 
 
-let items: Array<IItem> = [
-    { id: '1', title: 'First', isComplete: true },
-    { id: '2', title: 'Second', isComplete: false },
-    { id: '3', title: 'Third', isComplete: true }
-];
+const client = await new Client().connect(settings);
 
 
-export const getItems = ({ response }: IContext) => {
+export const getItems = async ({ response }: IContext) => {
     response.status = 200;
+    const items: Array<IItem> = await client.query('select * from items');
     response.body = {
         items
     };
 }
 
 
-export const getItem = ({ response, params }: IContext) => {
-    const item: IItem | undefined = items.find(item => item.id === params.id);
+export const getItem = async ({ response, params }: IContext) => {
+    const item: IItem | undefined = await client.query('select * from items where id = ?', [params.id]);
     if (item) {
         response.status = 200;
         response.body = {
