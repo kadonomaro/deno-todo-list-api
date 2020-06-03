@@ -9,7 +9,7 @@ const client = await new Client().connect(settings);
 
 export const getItems = async ({ response }: IContext) => {
     response.status = 200;
-    const items: Array<IItem> = await client.query('select * from items');
+    const items: Array<IItem> = await client.query(`select * from items`);
     response.body = {
         items
     };
@@ -17,7 +17,7 @@ export const getItems = async ({ response }: IContext) => {
 
 
 export const getItem = async ({ response, params }: IContext) => {
-    const item: IItem | undefined = await client.query('select * from items where id = ?', [params.id]);
+    const item: IItem | undefined = await client.query(`select * from items where id = ?`, [params.id]);
     if (item) {
         response.status = 200;
         response.body = {
@@ -44,7 +44,12 @@ export const createItem = async ({ response, request }: IContext) => {
         response.status = 201;
         const item: IItem = body.value;
         item.id = Date.now().toString();
-        items.push(item);
+        
+        await client.execute(`INSERT INTO items(id, title, completed) values(?, ?, ?)`, [
+            item.id,
+            item.title,
+            item.isComplete
+        ]);
         response.body = {
             item
         }
@@ -53,25 +58,36 @@ export const createItem = async ({ response, request }: IContext) => {
 
 
 export const updateItem = async ({ response, request, params }: IContext) => {
-    const index: number | undefined = items.findIndex(item => item.id === params.id);
+    const body = await request.body();
 
-    if (index) {
-        const body = await request.body();
-        items[index] = { ...items[index], ...body.value };
+    if (!request.hasBody) {
+        response.status = 400;
+        response.body = {
+            message: 'Invalid input data'
+        }
+    } else {
         response.status = 200;
-        response.body = items[index]
+        const item: IItem = body.value;
+        
+        await client.execute(`update items set title = ?, completed = ? where id = ?`, [item.title, item.isComplete, params.id]);
+        response.body = {
+            message: 'Item successfully updated'
+        }
+    }
+}
 
+
+export const deleteItem = async ({ response, params }: IContext) => {
+    const deleted = await client.execute(`delete from items where id = ?`, [params.id]);
+    if (deleted.affectedRows) {
+        response.status = 200;
+        response.body = {
+            message: 'Item successfully deleted'
+        }
     } else {
         response.status = 404;
         response.body = {
             message: 'Item not found'
         }
     }
-}
-
-
-export const deleteItem = ({ response, params }: IContext) => {
-    items = items.filter(item => item.id !== params.id);
-    response.status = 200;
-    response.body = { items };
 }
