@@ -1,5 +1,5 @@
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
-import { oakCors } from "https://deno.land/x/cors/mod.ts";
+import { Application, Router } from "./dependencies.ts";
+import { oakCors } from "./dependencies.ts";
 import { getItems, getItem, createItem, updateItem, deleteItem } from "./controllers/item.controller.ts";
 
 

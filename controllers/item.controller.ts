@@ -1,4 +1,4 @@
-import { Client } from "https://deno.land/x/mysql/mod.ts";
+import { Client } from "../dependencies.ts";
 import { settings } from "../db.settings.ts";
 import { IItem } from "../interfaces/item.interface.ts";
 import { IContext } from "../interfaces/context.interface.ts";
