@@ -48,7 +48,7 @@ export const createItem = async ({ response, request }: IContext) => {
         await client.execute(`INSERT INTO items(id, title, completed) values(?, ?, ?)`, [
             item.id,
             item.title,
-            item.isComplete
+            item.completed
         ]);
         response.body = {
             item
@@ -68,8 +68,11 @@ export const updateItem = async ({ response, request, params }: IContext) => {
     } else {
         response.status = 200;
         const item: IItem = body.value;
-        
-        await client.execute(`update items set title = ?, completed = ? where id = ?`, [item.title, item.isComplete, params.id]);
+        const query = `update items set ${item.title ? 'title = ?,' : ''} ${item.completed ? 'completed = ?' : ''} where id = ?`;
+        await client.execute(query, [item.title, item.completed, params.id].filter(Boolean))
+            .catch(err => {
+                console.log(err);
+            });
         response.body = {
             message: 'Item successfully updated'
         }
