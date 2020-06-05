@@ -94,3 +94,5 @@ export const deleteItem = async ({ response, params }: IContext) => {
         }
     }
 }
+
+client.close();
